@@ -31,6 +31,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
   }
 
+  /*
   def "trace request with propagation (useCaches: #useCaches)"() {
     setup:
     runUnderTrace("someTrace") {
@@ -182,6 +183,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     where:
     useCaches << [false, true]
   }
+  */
 
   def "test response code"() {
     setup:
@@ -224,6 +226,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
   }
 
+  /*
   def "test broken API usage"() {
     setup:
     HttpURLConnection conn = runUnderTrace("someTrace") {
@@ -453,4 +456,5 @@ class HttpUrlConnectionTest extends AgentTestRunner {
       }
     }
   }
+  */
 }

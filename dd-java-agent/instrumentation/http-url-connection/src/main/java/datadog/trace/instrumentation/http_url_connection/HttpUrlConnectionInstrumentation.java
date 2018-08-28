@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.agent.tooling.context.InstrumentationContextBean;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
@@ -52,6 +53,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     return new String[] {HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState"};
   }
 
+  public Class<? extends InstrumentationContextBean> contextClass() {
+    return HttpURLState.class;
+  }
+
   @Override
   public Map<ElementMatcher, String> transformers() {
     return Collections.<ElementMatcher, String>singletonMap(
@@ -68,6 +73,8 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         @Advice.This final HttpURLConnection thiz,
         @Advice.FieldValue("connected") final boolean connected,
         @Advice.Origin("#m") final String methodName) {
+
+      final HttpURLState fizbiz = Ctx.get(thiz, HttpURLState.class);
 
       final HttpURLState state = HttpURLState.get(thiz);
       String operationName = "http.request";
@@ -176,7 +183,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class HttpURLState {
+  public static class HttpURLState extends InstrumentationContextBean {
     private static final WeakMap<HttpURLConnection, HttpURLState> STATE_MAP = newWeakMap();
 
     public static HttpURLState get(final HttpURLConnection connection) {
