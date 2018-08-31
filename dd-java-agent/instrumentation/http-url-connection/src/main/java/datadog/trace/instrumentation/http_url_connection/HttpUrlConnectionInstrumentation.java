@@ -53,8 +53,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     return new String[] {HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState"};
   }
 
-  public Class<? extends InstrumentationContextBean> contextClass() {
-    return HttpURLState.class;
+  public Map<...>Class<? extends InstrumentationContextBean> contextStore() {
+    return {typeMatcher() -> HttpURLState.class
+            named("java.lang.Runnable") -> RunnableState.class
+        };
   }
 
   @Override
@@ -71,12 +73,13 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
         @Advice.This final HttpURLConnection thiz,
+        @Advice.Argument(0) final Runnable runnable,
         @Advice.FieldValue("connected") final boolean connected,
         @Advice.Origin("#m") final String methodName) {
 
-      final HttpURLState fizbiz = Ctx.get(thiz, HttpURLState.class);
+      final HttpURLState state = InstrumentationContext.get(thiz, HttpURLState.class);
+      final SpanHolder spanHolder = InstrumentationContext.get(thiz, SpanHolder.class);
 
-      final HttpURLState state = HttpURLState.get(thiz);
       String operationName = "http.request";
 
       switch (methodName) {
