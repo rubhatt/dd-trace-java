@@ -4,6 +4,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import net.bytebuddy.build.Plugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType.Builder;
 
 /** Bytebuddy gradle plugin which creates muzzle-references at compile time. */
@@ -30,7 +31,10 @@ public class MuzzleGradlePlugin implements Plugin {
   }
 
   @Override
-  public Builder<?> apply(final Builder<?> builder, final TypeDescription typeDescription) {
+  public Builder<?> apply(
+      final Builder<?> builder,
+      final TypeDescription typeDescription,
+      final ClassFileLocator classFileLocator) {
     return builder.visit(new MuzzleVisitor());
   }
 
@@ -42,7 +46,10 @@ public class MuzzleGradlePlugin implements Plugin {
     }
 
     @Override
-    public Builder<?> apply(final Builder<?> builder, final TypeDescription typeDescription) {
+    public Builder<?> apply(
+        final Builder<?> builder,
+        final TypeDescription typeDescription,
+        final ClassFileLocator classFileLocator) {
       return builder;
     }
   }
