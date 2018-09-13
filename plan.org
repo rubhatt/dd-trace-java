@@ -1,0 +1,71 @@
+* Purpose
+FIXME: Remove this file before review
+
+Provide an api for setting and updating context on user-defined variables
+* API
+To use
+- define classes and the appropriate state holders to apply to
+- Use in instrumentation
+  - implementation will either do map lookups or newfield get/sets
+#+BEGIN_SRC java
+// defined in Instrumenter
+public Map<String, String> contextStore() {
+  // must be string-literals. Static init'd Classes not be available at insturmentation load time
+  return {"java.net.HttpURLConnection" -> "datadog.trace.instrumentation.http_url_connection.HttpURLState"
+          "java.lang.Runnable" -> "datadog.trace.instrumentation.java_concurrent.RunnableState.class"};
+}
+
+// use in advice
+@Advice.OnMethodEnter(suppress = Throwable.class)
+public static Scope startSpan(@Advice.This final HttpURLConnection thiz) {
+  final HttpURLState state = InstrumentationContext.get(thiz, HttpURLState.class);
+  // ...
+}
+
+// expands into this:
+@Advice.OnMethodEnter(suppress = Throwable.class)
+public static Scope startSpan(@Advice.This final HttpURLConnection thiz) {
+  final HttpURLState state;
+  if (state instanceof DDContextEnabled) {
+    state = thiz.<contextStoreKey_contextStoreValue>
+  } else {
+    state = HttpURLState.get(thiz, HttpURLState.class);
+  }
+  // ...
+}
+#+END_SRC
+* Implementation
+- put DDContextEnabled on the bootstrap classloader
+- Inject all contextStore state classes as helpers
+
+Map Impl
+- add transformer to put a static map on the contextStore class
+- replace calls to InstrumentationContext.get to use that map
+
+Newfield Impl
+Example of an implementation which adds fields to classes.
+#+BEGIN_SRC java
+// Context Store creator.
+
+public ContextStoreCreator() {
+}
+
+public MethodVisitor visitInstrumentedMethod(Instrumentation.Default instrumenter) {
+  // create a method visitor which
+  // expands uses of InstrumentationContext
+
+  // this visitor runs over the advice method and will modify calls to InstrumentationContext.get()
+}
+
+// runs after instrumentation builder setup is complete
+public Builder afterInstrumentationSetup(AgentBuilder builder, Instrumentation.Default instrumenter) {
+
+  // add matchers for context-store classes. Modify their structure and add fields
+}
+
+FieldAdderAdvice {
+  // if class is loaded,
+  // visit class, add DDContextEnabled interface and add appropriate fields
+}
+
+#+END_SRC
