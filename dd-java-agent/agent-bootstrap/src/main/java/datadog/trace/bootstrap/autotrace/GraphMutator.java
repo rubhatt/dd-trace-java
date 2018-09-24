@@ -36,12 +36,12 @@ abstract class GraphMutator {
 
     @Override
     public void expand(AutotraceNode node, Runnable afterExpansionComplete) {
-      // if: set node state to expanded
-      // - run bytecode analysis and find all callers
-      // - get all loaded classes
-      //   - find subtypes
-      //   - find supertypes
       try {
+        // - get all loaded classes
+        //   - find subtypes
+        //   - find supertypes
+
+        // run bytecode analysis and find all callers
         instrumentation.retransformClasses(node.getClassLoader().loadClass(node.getClassName()));
         afterExpansionComplete.run();
       } catch (Exception e) {

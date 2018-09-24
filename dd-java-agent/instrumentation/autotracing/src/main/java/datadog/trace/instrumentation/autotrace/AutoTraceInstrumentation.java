@@ -54,6 +54,23 @@ public final class AutoTraceInstrumentation extends Instrumenter.Default {
                   ProtectionDomain protectionDomain) {
                 loaderUnderTransform.set(null);
                 typeUnderTransform.set(null);
+
+                classLoader = null == classLoader ? Utils.getBootstrapProxy() : classLoader;
+
+                TypeDescription superType = typeDescription.getSuperClass() == null? null : typeDescription.getSuperClass().asErasure();
+                try {
+                  while (superType != null) {
+                    if (AutotraceGraph.get().isDiscovered(classLoader.loadClass(superType.getName()).getClassLoader(), superType.getName())) {
+                      // for any declared methods are in the graph AND typeUnderTransform overrides/implements said method:
+                      // -- add method impl
+                      // -- requst to match method tracing
+                    }
+                    superType = superType.getSuperClass() == null? null : superType.getSuperClass().asErasure();
+                  }
+                } catch (ClassNotFoundException cnfe) {
+                  log.debug("Failed to apply autotrace hierarchy detection for " + superType, cnfe);
+                }
+
                 if (AutotraceGraph.get().isDiscovered(classLoader, typeDescription.getName())) {
                   loaderUnderTransform.set(classLoader);
                   typeUnderTransform.set(typeDescription);

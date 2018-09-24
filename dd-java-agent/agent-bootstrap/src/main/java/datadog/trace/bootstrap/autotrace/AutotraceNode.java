@@ -18,6 +18,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AutotraceNode {
+  // ASM Unavailable on bootstrap
+  private static final int ACC_PUBLIC = 0x0001;
+  private static final int ACC_PRIVATE = 0x0002;
+  private static final int ACC_PROTECTED = 0x0004;
+  private static final int ACC_STATIC = 0x0008;
+  private static final int ACC_FINAL = 0x0010;
+  private static final int ACC_NATIVE = 0x0100;
+
   private final WeakReference<ClassLoader> classloader;
   private final String className;
   private final String methodSignature;
@@ -27,6 +35,9 @@ public class AutotraceNode {
       new AtomicReference<>(TracingState.UNSET);
   private final AtomicBoolean bytecodeTracingApplied = new AtomicBoolean(false);
   private final List<AutotraceNode> edges = new CopyOnWriteArrayList<>();
+  private final List<AutotraceNode> superMethods = new CopyOnWriteArrayList<>();
+  private final List<AutotraceNode> subMethods = new CopyOnWriteArrayList<>();
+  final int accessFlags = 0;
 
   AutotraceNode(
       GraphMutator graphMutator,
@@ -56,6 +67,14 @@ public class AutotraceNode {
 
   public String getMethodTypeSignature() {
     return methodSignature;
+  }
+
+  public boolean isPrivate() {
+    return (accessFlags & ACC_PRIVATE) != 0;
+  }
+
+  public boolean isStatic() {
+    return (accessFlags & ACC_STATIC) != 0;
   }
 
   @Override
