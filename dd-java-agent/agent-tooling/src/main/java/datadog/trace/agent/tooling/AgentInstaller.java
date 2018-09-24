@@ -61,6 +61,7 @@ public class AgentInstaller {
                         not(
                             named("java.net.URL")
                                 .or(named("java.net.HttpURLConnection"))
+                                .or(named("java.lang.reflect.Method"))
                                 .or(nameStartsWith("java.util.concurrent.")))))
             .or(nameStartsWith("com.sun."))
             .or(
